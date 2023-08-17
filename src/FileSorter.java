@@ -12,29 +12,48 @@ public class FileSorter {
         this.isInteger = isInteger;
     }
 
-    // Метод для объединения и слияния отсортированных списков
-    private void merge(List<String> result, List<String> left, List<String> right) {
-        int i = 0, j = 0, k = 0;
+    public void mergeFiles(List<String> inputFiles, String outputFile) {
+        List<String> data = new ArrayList<>();
+        for (String filename : inputFiles) {
+            data.addAll(readFile(filename)); // Чтение данных из каждого файла
+        }
+
+        List<String> sortedData = mergeSort(data); // Сортировка данных слиянием
+        writeFile(outputFile, sortedData); // Запись отсортированных данных в выходной файл
+    }
+
+    private List<String> mergeSort(List<String> arr) {
+        if (arr.size() <= 1) {
+            return arr; // Базовый случай: если массив содержит 1 элемент или меньше, он уже отсортирован
+        }
+
+        int mid = arr.size() / 2;
+        List<String> left = mergeSort(arr.subList(0, mid)); // Сортировка левой половины
+        List<String> right = mergeSort(arr.subList(mid, arr.size())); // Сортировка правой половины
+
+        return merge(left, right); // Объединение и слияние отсортированных половин
+    }
+
+    private List<String> merge(List<String> left, List<String> right) {
+        List<String> result = new ArrayList<>();
+        int i = 0, j = 0;
 
         // Сравнение для слияния в нужном порядке (возрастание или убывание)
         while (i < left.size() && j < right.size()) {
             if (compare(left.get(i), right.get(j))) {
-                result.set(k++, left.get(i++));
+                result.add(left.get(i));
+                i++;
             } else {
-                result.set(k++, right.get(j++));
+                result.add(right.get(j));
+                j++;
             }
         }
 
-        while (i < left.size()) {
-            result.set(k++, left.get(i++));
-        }
-
-        while (j < right.size()) {
-            result.set(k++, right.get(j++));
-        }
+        result.addAll(left.subList(i, left.size()));
+        result.addAll(right.subList(j, right.size()));
+        return result;
     }
 
-    // Метод для сравнения двух элементов в зависимости от типа данных и режима сортировки
     private boolean compare(String a, String b) {
         if (isInteger) {
             int intA = Integer.parseInt(a);
@@ -45,8 +64,7 @@ public class FileSorter {
         }
     }
 
-    // Метод для чтения данных из файла и возврата списка строк
-    private List<String> readFile(String filename) throws IOException {
+    private List<String> readFile(String filename) {
         List<String> data = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
@@ -56,52 +74,20 @@ public class FileSorter {
                     data.add(line);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return data;
     }
 
-    // Метод для записи данных в файл
-    private void writeFile(String filename, List<String> data) throws IOException {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
+    private void writeFile(String filename, List<String> data) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
             for (String item : data) {
-                pw.println(item);
+                bw.write(item);
+                bw.newLine();
             }
-        }
-    }
-
-    // Метод для сортировки слиянием
-    public void mergeFiles(List<String> inputFiles, String outputFile) {
-        try {
-            List<String> data = new ArrayList<>();
-
-            // Чтение всех данных из входных файлов
-            for (String filename : inputFiles) {
-                data.addAll(readFile(filename));
-            }
-
-            // Сортировка слиянием
-            mergeSort(data);
-
-            // Запись отсортированных данных в выходной файл
-            writeFile(outputFile, data);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    // Метод для сортировки слиянием
-    private void mergeSort(List<String> arr) {
-        if (arr.size() <= 1) {
-            return;
-        }
-
-        int mid = arr.size() / 2;
-        List<String> left = new ArrayList<>(arr.subList(0, mid));
-        List<String> right = new ArrayList<>(arr.subList(mid, arr.size()));
-
-        mergeSort(left);
-        mergeSort(right);
-
-        merge(arr, left, right);
     }
 }
